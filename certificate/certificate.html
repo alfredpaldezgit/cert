@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Warranty Certificate</title>
+  <link rel="stylesheet" href="../css/certificate.css" />
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="certificate-container">
+    <div id="pdf-certificate-content">
+      <header class="cert-header">
+        <div class="company-info">
+          <h1>AGILE TECHFRONTIER CORPORATION</h1>
+          <p>Makati Branch: 8735 Paseo De Roxas corner Makati Avenue, Makati City, Philippines 1226</p>
+          <p>Southwoods Branch: VCC Building, Blk 16 Lot 2 San Agustin Village, San Francisco, Biñan, Laguna</p>
+          <p>Email: info@agiletechfrontier.com</p>
+        </div>
+        <div class="logos">
+          <img src="../img/agiletechfrontier.jpg" alt="Agile Techfrontier Logo" class="logo-agile" />
+          <img src="../img/asus.jpg" alt="ASUS Authorized Service Center" class="logo-asus" />
+          <div class="date-section">
+            <p><span id="certificateDate">DATE</span></p>
+          </div>
+        </div>
+      </header>
+
+      <section class="recipient-info">
+        <p>To:</p>
+        <p><span id="recipientCompanyName">COMPANY NAME</span></p>
+        <p><span id="recipientCompanyAddress">ADDRESS OF THE COMPANY</span></p>
+      </section>
+
+      <section class="title-section">
+        <h2>WARRANTY CERTIFICATE</h2>
+      </section>
+
+      <section class="reference-info">
+        <p>
+          In reference to P.O. #: <span id="purchaseOrderNumberRef">PURCHASED ORDER NUMBER</span> 
+          S.O. #: <span id="salesOrderNumberRef">SALES ORDER NUMBER</span>, 
+          <b>AGILE TECHFRONTIER CORPORATION</b> will provide the following warranty to 
+          <span id="warrantyRecipientCompanyName">COMPANY NAME</span>.
+        </p>
+      </section>
+
+      <section class="products-table-section">
+        <table id="certificateProductsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PRODUCT DESCRIPTION</th>
+              <th>QTY</th>
+              <th>SERIAL NOS.</th>
+              <th>WARRANTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS will populate this -->
+          </tbody>
+        </table>
+      </section>
+
+      <section class="signatures-section">
+        <div class="signature-block">
+          <p>Prepared by:</p> <br />
+          <p class="signer-name">RHEA AGUILAR</p>
+          <p class="signer-title">Technical Sales Engineer</p>
+        </div>
+        <div class="signature-block">
+          <p>Approved by:</p> <br />
+          <p class="signer-name">RICHARD FELIX DELA CRUZ</p>
+          <p class="signer-title">VP Operations and I.T.P</p>
+        </div>
+      </section>
+
+      <footer class="cert-footer">
+        <p>508 Peninsula Court Building, Paseo de Roxas Corner Makati Avenue</p>
+        <p>Barangay Bel-Air, Makati City, Philippines 1226</p>
+        <p>
+          Tel. no. 02 8297 0498 | 
+          <a href="http://www.agiletechfrontier.com">www.agiletechfrontier.com</a> | 
+          info@agiletechfrontier.com
+        </p>
+      </footer>
+    </div>
+
+    <div class="pdf-hide back-btn-topleft">
+      <button id="backBtn" onclick="window.location.href='../form.html'">
+        <i class='bx bx-arrow-back' style="font-size:20px;vertical-align:middle;margin-right:6px;"></i>Back to Form
+      </button>
+    </div>
+    <div class="pdf-hide download-btn-topright">
+      <button id="downloadPdfBtn">
+        <i class='bx bx-download' style="font-size:20px;vertical-align:middle;margin-right:6px;"></i>Download as PDF
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    // Load certificate data based on URL id
+    async function loadCertificateData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
+      if (!id) {
+        alert("Missing certificate ID.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`../api/get_certificate.php?id=${id}`);
+        const data = await res.json();
+
+        if (!data || !data.certificate) {
+          alert("Invalid or missing data.");
+          return;
+        }
+
+        document.getElementById("certificateDate").textContent = data.certificate.form_date;
+        document.getElementById("recipientCompanyName").textContent = data.certificate.company_name;
+        document.getElementById("recipientCompanyAddress").textContent = data.certificate.company_address;
+        document.getElementById("purchaseOrderNumberRef").textContent = data.certificate.purchase_order_number;
+        document.getElementById("salesOrderNumberRef").textContent = data.certificate.sales_order_number;
+        document.getElementById("warrantyRecipientCompanyName").textContent = data.certificate.company_name;
+
+        const tbody = document.querySelector("#certificateProductsTable tbody");
+        tbody.innerHTML = "";
+
+        data.products.forEach((product, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${product.product_description}</td>
+            <td>${product.quantity}</td>
+            <td>${product.serial_numbers}</td>
+            <td>${product.warranty_info}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Failed to load certificate data:", err);
+        alert("Failed to load certificate.");
+      }
+    }
+
+    // Download as PDF
+    document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+      const element = document.getElementById("pdf-certificate-content");
+      const opt = {
+        margin: 0.5,
+        filename: 'warranty_certificate.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    });
+
+    window.onload = loadCertificateData;
+  </script>
+</body>
+</html>

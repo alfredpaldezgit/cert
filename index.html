@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Warranty Certificate Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+  <style>
+    #customStickyToast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ff3333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 4px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
+    }
+    #customStickyToast.show { display: flex; opacity: 1; }
+    #customStickyToast.hide { opacity: 0; }
+    #customToastClose {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="text-primary">Warranty Certificate Form</h1>
+      <a href="certificates_list.php" class="btn btn-outline-primary">
+        <i class='bx bx-list-ul'></i> View All Certificates
+      </a>
+    </div>
+
+    <!-- Company Information -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class='bx bxs-building-house'></i> Company Information
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="companyName" class="form-label"><i class='bx bxs-user'></i> Company Name</label>
+          <input type="text" id="companyName" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label for="companyAddress" class="form-label"><i class='bx bxs-map'></i> Address of the Company</label>
+          <textarea id="companyAddress" rows="3" class="form-control"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Details -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class='bx bx-receipt'></i> Order Details
+      </div>
+      <div class="card-body row">
+        <div class="mb-3 col-md-6">
+          <label for="purchasedNumber" class="form-label"><i class='bx bx-barcode'></i> Purchase Order Number</label>
+          <input type="text" id="purchasedNumber" class="form-control" />
+        </div>
+        <div class="mb-3 col-md-3">
+          <label for="soNumber" class="form-label"><i class='bx bx-barcode'></i> Sales Order Number</label>
+          <input type="text" id="soNumber" class="form-control" />
+        </div>
+        <div class="mb-3 col-md-3">
+          <label for="formDate" class="form-label"><i class='bx bx-calendar'></i> Date</label>
+          <input type="date" id="formDate" class="form-control" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <span><i class='bx bx-package'></i> Product Details</span>
+        <button type="button" id="addProductBtn" class="btn btn-sm btn-light">
+          <i class='bx bx-plus'></i> Add Product
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Product Description</th>
+                <th>Qty</th>
+                <th>Serial Nos.</th>
+                <th>Warranty</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody">
+              <!-- JS will insert rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="text-end">
+      <button type="button" class="btn btn-success" onclick="submitForm()">
+        <i class='bx bx-file'></i> Generate Warranty Certificate
+      </button>
+    </div>
+  </div>
+
+  <!-- Custom Toast -->
+  <div id="customStickyToast">
+    <span id="customToastMsg"></span>
+    <button id="customToastClose">&times;</button>
+  </div>
+
+  <script>
+    window.showCustomToast = function(message, type = 'error') {
+      let toast = document.getElementById('customStickyToast');
+      document.getElementById('customToastMsg').textContent = message;
+      toast.style.background = type === 'success' ? '#28a745' : '#ff3333';
+      toast.style.display = 'flex';
+      setTimeout(() => { toast.classList.add('show'); }, 10);
+      clearTimeout(window._customToastTimeout);
+      window._customToastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(() => {
+          toast.style.display = 'none';
+          toast.classList.remove('hide');
+        }, 300);
+      }, 3000);
+    };
+    document.getElementById('customToastClose').onclick = () => {
+      document.getElementById('customStickyToast').classList.remove('show');
+    };
+  </script>
+
+  <script>
+    // Add product row
+    document.getElementById('addProductBtn').addEventListener('click', () => {
+      const tableBody = document.getElementById('productTableBody');
+      const rowCount = tableBody.rows.length + 1;
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+        <td>${rowCount}</td>
+        <td><input type="text" class="form-control product-description" /></td>
+        <td><input type="number" class="form-control product-quantity" /></td>
+        <td><input type="text" class="form-control product-serial" /></td>
+        <td><input type="text" class="form-control product-warranty" /></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove();">Remove</button></td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+
+    function submitForm() {
+      const data = {
+        companyName: document.getElementById("companyName").value,
+        companyAddress: document.getElementById("companyAddress").value,
+        purchaseOrderNumber: document.getElementById("purchasedNumber").value,
+        salesOrderNumber: document.getElementById("soNumber").value,
+        formDate: document.getElementById("formDate").value,
+        products: []
+      };
+
+      const rows = document.querySelectorAll("#productTableBody tr");
+      rows.forEach(row => {
+        data.products.push({
+          description: row.querySelector(".product-description").value,
+          quantity: row.querySelector(".product-quantity").value,
+          serial: row.querySelector(".product-serial").value,
+          warranty: row.querySelector(".product-warranty").value
+        });
+      });
+
+      fetch("submit_form.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(response => {
+        if (response.status === "success") {
+          window.showCustomToast("Data saved successfully!", "success");
+          setTimeout(() => {
+            window.location.href = `certificates_list.php`;
+          }, 1500);
+        } else {
+          window.showCustomToast("Error saving data.");
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        window.showCustomToast("Connection error.");
+      });
+    }
+  </script>
+</body>
+</html>
